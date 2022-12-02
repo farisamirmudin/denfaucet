@@ -38,7 +38,7 @@ const Body = () => {
         </form>
 
         {/* message shown if account connected */}
-        {account && <p>✅ Alchemy account connected, receive 50 DEN!</p>}
+        {account && <p>✅ Wallet connected, receive 50 DEN!</p>}
         {/* show transaction hash */}
         <div className='bg-gradient-to-r from-[#7D77FF] to-[#FF9482] text-white py-2 px-4 rounded-t-lg mt-4'>Transaction</div>
         <div className="rounded-b-lg px-4 py-2 border">
