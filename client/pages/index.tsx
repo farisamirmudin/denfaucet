@@ -5,9 +5,9 @@ import Faq from '../components/Faq'
 import Footer from '../components/Footer'
 import Nav from '../components/Nav'
 import Owner from '../components/Owner'
+import QuickLink from '../components/QuickLink'
 
 const Home: NextPage = () => {
-
   return (
     <div id="top" className="bg-gradient-to-br from-[#7D77FF] to-[#FF9482] tracking-wider py-2">
       <Head>
@@ -19,6 +19,7 @@ const Home: NextPage = () => {
         <Body />
         <Faq />
         {process.env.NEXT_PUBLIC_ENV !== 'production' && <Owner />}
+        <QuickLink />
       </main>
       <Footer />
     </div>

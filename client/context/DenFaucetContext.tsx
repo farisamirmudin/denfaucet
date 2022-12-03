@@ -1,6 +1,6 @@
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
-import { ExternalProvider } from "@ethersproject/providers";
-import { DenFaucetContract } from '../utils/smartcontract'
+import { contractAbi, contractAddress } from '../utils/smartcontract'
+import { ethers } from "ethers";
 
 declare global {
   interface Window {
@@ -25,8 +25,14 @@ export interface ContextProps {
 }
 
 export const DenFaucetContext = createContext<ContextProps | undefined>(undefined);
-
 export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) => {
+  let DenFaucetContract: ethers.Contract
+  if (typeof window !== 'undefined') {
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const signer = provider.getSigner()
+    DenFaucetContract = new ethers.Contract(contractAddress, contractAbi, signer)
+  }
+
   const [account, setAccount] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string>("")
   const [failMsg, setFailMsg] = useState<string>("")
@@ -35,7 +41,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
 
   const connectWallet = async () => {
     if (!window.ethereum) return
-    const reqAccounts = await window.ethereum.request?.({ method: "eth_requestAccounts" });
+    const reqAccounts = await window.ethereum.request({ method: "eth_requestAccounts" });
     if (reqAccounts.length) {
       setAccount(reqAccounts[0]);
     }
@@ -43,7 +49,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
 
   const checkIfWalletIsConnected = async () => {
     if (!window.ethereum) return
-    const accounts = await window.ethereum.request?.({ method: "eth_accounts" });
+    const accounts = await window.ethereum.request({ method: "eth_accounts" });
     if (accounts.length) {
       setAccount(accounts[0]);
     }
@@ -55,13 +61,13 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
 
 
   const getContractBalance = async () => {
-    let balance = await DenFaucetContract?.getBalance();
+    let balance = await DenFaucetContract.getBalance();
     balance = parseInt(balance._hex) / (10 ** 18)
   }
 
   const withdraw = async () => {
     try {
-      const res = await DenFaucetContract?.withdraw();
+      const res = await DenFaucetContract.withdraw();
       const data = await res.wait()
       console.log(data)
     } catch (error) {
@@ -71,7 +77,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
   }
   const setLockTime = async () => {
     try {
-      const res = await DenFaucetContract?.setLockTime(1440)
+      const res = await DenFaucetContract.setLockTime(1440)
       const data = await res.wait()
       console.log(data)
     } catch (error) {
@@ -81,7 +87,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
   }
   const setWithdrawal = async () => {
     try {
-      const res = await DenFaucetContract?.setWithdrawalAmount(50)
+      const res = await DenFaucetContract.setWithdrawalAmount(50)
       const data = await res.wait()
       console.log(data)
     } catch (error) {
@@ -92,7 +98,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
 
   const requestToken = async () => {
     try {
-      const res = await DenFaucetContract?.requestToken();
+      const res = await DenFaucetContract.requestToken();
       setIsLoading(true)
       const data = await res.wait()
       setIsLoading(false)
@@ -107,10 +113,7 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     if (!window.ethereum) return
-
-    if (window.ethereum.isConnected()) {
-      window.ethereum.on('accountsChanged', checkIfWalletIsConnected)
-    }
+    window.ethereum.on('accountsChanged', checkIfWalletIsConnected)
   }, [account])
 
   return (
