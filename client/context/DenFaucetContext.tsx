@@ -1,6 +1,7 @@
-import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { contractAbi, contractAddress } from '../utils/smartcontract'
 import { ethers } from "ethers";
+import toast from 'react-hot-toast'
 
 declare global {
   interface Window {
@@ -11,12 +12,8 @@ declare global {
 export interface ContextProps {
   account: string
   transactionHash: string
-  successMsg: string
-  failMsg: string
   isLoading: boolean
   connectWallet: () => void
-  setFailMsg: Dispatch<SetStateAction<string>>
-  setSuccessMsg: Dispatch<SetStateAction<string>>
   withdraw: () => void
   requestToken: () => void
   setLockTime: () => void
@@ -34,8 +31,6 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
   }
 
   const [account, setAccount] = useState<string>("");
-  const [successMsg, setSuccessMsg] = useState<string>("")
-  const [failMsg, setFailMsg] = useState<string>("")
   const [transactionHash, setTransactionHash] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -97,17 +92,25 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
   }
 
   const requestToken = async () => {
+    const notification = toast.loading('Sending...')
     try {
       const res = await DenFaucetContract.requestToken();
       setIsLoading(true)
       const data = await res.wait()
       setIsLoading(false)
-      setSuccessMsg('50 DEN has been sent to your wallet. Enjoy!')
-      setFailMsg('')
+      toast.dismiss(notification)
+      toast.success('50 DEN has been successfully sent to you!', {
+        duration: 5000
+      })
       setTransactionHash(res.hash)
     } catch (error) {
-      setFailMsg(error.reason)
-      setSuccessMsg('')
+      toast.dismiss(notification)
+      toast.error(error.reason, {
+        duration: 5000,
+        style: {
+          textTransform: 'capitalize'
+        }
+      })
     }
   }
 
@@ -120,17 +123,13 @@ export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) =
     <DenFaucetContext.Provider value={
       {
         account,
-        failMsg,
         transactionHash,
-        successMsg,
         isLoading,
         connectWallet,
         withdraw,
         requestToken,
         setLockTime,
         setWithdrawal,
-        setFailMsg,
-        setSuccessMsg,
         getContractBalance
       }}>
       {children}
