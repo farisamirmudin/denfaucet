@@ -19,11 +19,11 @@ const Faq = () => {
       )}
       <div className={style.container}>
         <p className={style.title}>{faqs[faqs.length - 2].question}</p>
-        <p className='address'>In order to see and use DEN token, you first need to import the token in your wallet by pasting the token address <span className='underline decoration-orange-400 decoration-2 text-sm'>0x975651f39Ed7e1380aC6d969F8a61A36f7Efa048</span> in {`Asset > Import tokens > Token`} contract address.</p>
+        <p className='address'>In order to see and use DEN token, you first need to import the token in your wallet. In {`Asset > Import tokens > Token`} contract address, paste the token address <span className='underline decoration-orange-400 decoration-2 text-sm'>0x975651f39Ed7e1380aC6d969F8a61A36f7Efa048</span>.</p>
       </div>
       <div className={style.container}>
         <p className={style.title}>{faqs[faqs.length - 1].question}</p>
-        <p>Support DEN Token by sharing your experience with <Link className='underline decoration-orange-400 decoration-2' target={'_blank'} href={shareTweet}><BsTwitter className='inline-block align-text-top'/> Tweet</Link></p>
+        <p>Support DEN Token by sharing your experience with a <Link className='underline decoration-orange-400 decoration-2' target={'_blank'} href={shareTweet}><BsTwitter className='inline-block align-text-top'/> Tweet</Link>.</p>
       </div>
     </div>
   )
