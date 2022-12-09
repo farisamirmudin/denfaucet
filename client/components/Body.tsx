@@ -18,7 +18,7 @@ const Body = () => {
         </div>
       </div>
       <div className='my-16'>
-        <p className='text-3xl'>Transaction <span className='underline text-sm italic decoration-orange-400 decoration-2'><Link target={'_blank'} href={'https://goerli.etherscan.io/address/0x7C622077887E60259a4131b9287EbA5c014f716C'}>View on Etherscan</Link></span></p>
+        <p className='text-3xl'>Transaction <Link target={'_blank'} className='underline text-sm italic decoration-orange-400 decoration-2' href={'https://goerli.etherscan.io/address/0x7C622077887E60259a4131b9287EbA5c014f716C'}>View on Etherscan</Link></p>
         {transactionHash ? <Link target={'_blank'} className="text-gray-100 hash" href={`https://goerli.etherscan.io/tx/${transactionHash}`}>Transaction Hash: {transactionHash}</Link> : 'No Transaction'}
       </div>
     </>
