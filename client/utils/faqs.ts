@@ -9,15 +9,11 @@ export const faqs = [
   },
   {
     "question": "How do I use this?",
-    "answer": "To request funds, simply sign in with your wallet address, and hit “Send Me DEN”."
-  },
-  {
-    "question": "How does it work?",
-    "answer": "You can request 50 DEN every 24h!"
+    "answer": "To request funds, simply connect with your wallet address, and hit “Send Me DEN”. You can request 50 DEN every 24h!"
   },
   {
     "question": "Where can I use DEN token?",
-    "answer": "As of now there is nothing you can do with the token. I would love to develop a blockchain games and use the token for in games transaction. Stay tune for the upcoming news! Want to collabrate? contact me via Email or Linkedin (see below)."
+    "answer": "As of now there is nothing you can do with the token. I am thinking of developing a blockchain game or a decentralized application that uses this token. Stay tune for the upcoming news! Want to collabrate? contact me via Email or Linkedin (see below)."
   },
   {
     "question": "There's a bug on the website?",
