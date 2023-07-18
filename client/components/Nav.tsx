@@ -21,7 +21,7 @@ export default function Nav() {
                 ? account.slice(0, 4) + "..." + account.slice(-4)
                 : "Connect Wallet"}
             </button>
-            <Owner />
+            {account === process.env.NEXT_PUBLIC_ADMIN_WALLET && <Owner />}
           </div>
         </ul>
       </div>
