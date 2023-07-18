@@ -73,10 +73,10 @@ export const DenFaucetProvider = ({
   );
 
   useEffect(() => {
-    // if (!window.ethereum) {
-    //   toast.error("Metamask is not installed.");
-    //   return;
-    // }
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     const populateState = async () => {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
