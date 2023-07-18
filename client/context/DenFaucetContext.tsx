@@ -24,9 +24,7 @@ declare global {
 
 const Web3Error = z.object({
   code: z.string(),
-  error: z.object({
-    message: z.string(),
-  }),
+  message: z.string(),
 });
 
 interface ContextProps {
@@ -89,7 +87,7 @@ export const DenFaucetProvider = ({
         dispatch({ contract, provider, signer });
       } catch (error: unknown) {
         const parsedError = Web3Error.parse(error);
-        toast.error(parsedError.code);
+        toast.error(parsedError.message.split("(")[0].trim());
       }
     };
     populateState();
@@ -109,7 +107,7 @@ export const DenFaucetProvider = ({
       dispatch({ connectedWalletAddress: wallets?.[0] });
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
     }
   };
 
@@ -124,7 +122,7 @@ export const DenFaucetProvider = ({
       return Number(balance) / 10 ** 18;
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
       return 0;
     }
   };
@@ -142,7 +140,7 @@ export const DenFaucetProvider = ({
       console.log(data);
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
     }
   };
   const setLockTime = async (duration: number) => {
@@ -159,7 +157,7 @@ export const DenFaucetProvider = ({
       console.log(data);
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
     }
   };
   const setWithdrawal = async (amount: number) => {
@@ -176,7 +174,7 @@ export const DenFaucetProvider = ({
       console.log(data);
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
     }
   };
 
@@ -195,7 +193,7 @@ export const DenFaucetProvider = ({
       console.log(data);
     } catch (error: unknown) {
       const parsedError = Web3Error.parse(error);
-      toast.error(parsedError.code);
+      toast.error(parsedError.message.split("(")[0].trim());
     } finally {
       setIsLoading(false);
     }
