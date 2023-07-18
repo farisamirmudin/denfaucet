@@ -1,147 +1,151 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { contractAbi, contractAddress } from '../utils/smartcontract'
-import { ethers } from "ethers";
-import toast from 'react-hot-toast'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
+import {
+  BrowserProvider,
+  ContractTransactionResponse,
+  Eip1193Provider,
+  ethers,
+} from "ethers";
+import abi from "../utils/DenFaucet.json";
 
 declare global {
   interface Window {
-    ethereum: any
+    ethereum: BrowserProvider & Eip1193Provider;
+    owner_modal: HTMLDialogElement;
   }
 }
 
-export interface ContextProps {
-  account: string
-  transactionHash: string
-  isLoading: boolean
-  connectWallet: () => void
-  withdraw: () => void
-  requestToken: () => void
-  setLockTime: () => void
-  setWithdrawal: () => void
-  getContractBalance: () => void
+interface ContextProps {
+  account?: string;
+  transactionHash?: string;
+  isLoading: boolean;
+  connectWallet: () => void;
+  withdraw: () => void;
+  requestToken: () => void;
+  setLockTime: () => void;
+  setWithdrawal: (amount: number) => void;
+  getContractBalance: () => Promise<number>;
 }
 
-export const DenFaucetContext = createContext<ContextProps | undefined>(undefined);
-export const DenFaucetProvider = ({ children }: { children: React.ReactNode }) => {
-  let DenFaucetContract: ethers.Contract
-  if (typeof window !== 'undefined') {
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
-    const signer = provider.getSigner()
-    DenFaucetContract = new ethers.Contract(contractAddress, contractAbi, signer)
-  }
+type State = {
+  contract?: ethers.Contract;
+  provider?: ethers.BrowserProvider;
+  signer?: ethers.JsonRpcSigner;
+  connectedWalletAddress?: string;
+  transactionHash?: string;
+};
 
-  const [account, setAccount] = useState<string>("");
-  const [transactionHash, setTransactionHash] = useState<string>("")
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+export const DenFaucetContext = createContext<ContextProps | undefined>(
+  undefined
+);
+export const DenFaucetProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [state, dispatch] = useReducer(
+    (prev: State, next: State) => ({
+      ...prev,
+      ...next,
+    }),
+    {
+      contract: undefined,
+      provider: undefined,
+      signer: undefined,
+      connectedWalletAddress: undefined,
+      transactionHash: undefined,
+    }
+  );
+
+  useEffect(() => {
+    const populateState = async () => {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
+        abi.abi,
+        signer
+      );
+      dispatch({ contract, provider, signer });
+    };
+    populateState();
+  }, []);
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const connectWallet = async () => {
-    if (!window.ethereum) return
-    const reqAccounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-    if (reqAccounts.length) {
-      setAccount(reqAccounts[0]);
-    }
-  }
-
-  const checkIfWalletIsConnected = async () => {
-    if (!window.ethereum) return
-    const accounts = await window.ethereum.request({ method: "eth_accounts" });
-    if (accounts.length) {
-      setAccount(accounts[0]);
-    }
-  }
-
-  useEffect(() => {
-    checkIfWalletIsConnected()
-  }, [])
-
+    if (!state.provider) return;
+    const wallets = (await state.provider.send(
+      "eth_requestAccounts",
+      []
+    )) as string[];
+    dispatch({ connectedWalletAddress: wallets?.[0] });
+  };
 
   const getContractBalance = async () => {
-    let balance = await DenFaucetContract.getBalance();
-    balance = parseInt(balance._hex) / (10 ** 18)
-  }
+    if (!state.contract) return 0;
+    const balance = (await state.contract.getBalance()) as BigInt;
+    return Number(balance) / 10 ** 18;
+  };
 
   const withdraw = async () => {
-    try {
-      const res = await DenFaucetContract.withdraw();
-      const data = await res.wait()
-      console.log(data)
-    } catch (error) {
-      console.log(error)
-    }
-
-  }
+    if (!state.contract) return;
+    const res = await state.contract.withdraw();
+    const data = await res.wait();
+    console.log(data);
+  };
   const setLockTime = async () => {
-    try {
-      const res = await DenFaucetContract.setLockTime(1440)
-      const data = await res.wait()
-      console.log(data)
-    } catch (error) {
-      console.log(error)
-    }
-
-  }
-  const setWithdrawal = async () => {
-    try {
-      const res = await DenFaucetContract.setWithdrawalAmount(50)
-      const data = await res.wait()
-      console.log(data)
-    } catch (error) {
-      console.log(error)
-    }
-
-  }
+    if (!state.contract) return;
+    const res = await state.contract.setLockTime(1440);
+    const data = await res.wait();
+    console.log(data);
+  };
+  const setWithdrawal = async (amount: number) => {
+    if (!state.contract) return;
+    const res = await state.contract.setWithdrawalAmount(amount);
+    const data = await res.wait();
+    console.log(data);
+  };
 
   const requestToken = async () => {
-    const notification = toast.loading('Sending...')
-    try {
-      const res = await DenFaucetContract.requestToken();
-      setIsLoading(true)
-      const data = await res.wait()
-      setIsLoading(false)
-      toast.dismiss(notification)
-      toast.success('50 DEN has been successfully sent to you!', {
-        duration: 5000
-      })
-      setTransactionHash(res.hash)
-    } catch (error) {
-      toast.dismiss(notification)
-      toast.error(error.reason, {
-        duration: 5000,
-        style: {
-          textTransform: 'capitalize'
-        }
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (!window.ethereum) return
-    window.ethereum.on('accountsChanged', checkIfWalletIsConnected)
-  }, [account])
+    if (!state.contract) return;
+    setIsLoading(true);
+    const res =
+      (await state.contract.requestToken()) as ContractTransactionResponse;
+    dispatch({ transactionHash: res.hash });
+    const data = await res.wait();
+    console.log(data);
+    setIsLoading(false);
+  };
 
   return (
-    <DenFaucetContext.Provider value={
-      {
-        account,
-        transactionHash,
+    <DenFaucetContext.Provider
+      value={{
+        account: state.connectedWalletAddress,
+        transactionHash: state.transactionHash,
         isLoading,
         connectWallet,
         withdraw,
         requestToken,
         setLockTime,
         setWithdrawal,
-        getContractBalance
-      }}>
+        getContractBalance,
+      }}
+    >
       {children}
     </DenFaucetContext.Provider>
-  )
-}
+  );
+};
 
 export const useFaucetContext = () => {
   const context = useContext(DenFaucetContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("Context is undefined");
   }
   return context;
-}
-
+};
