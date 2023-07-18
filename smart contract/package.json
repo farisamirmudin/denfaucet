@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx hardhat node"
+    "start": "npx hardhat node",
+    "test": "npx hardhat test"
   },
   "author": "",
   "license": "ISC",
