@@ -12,6 +12,8 @@ import {
   ethers,
 } from "ethers";
 import abi from "../utils/DenFaucet.json";
+import toast from "react-hot-toast";
+import { z } from "zod";
 
 declare global {
   interface Window {
@@ -20,6 +22,13 @@ declare global {
   }
 }
 
+const Web3Error = z.object({
+  code: z.string(),
+  error: z.object({
+    message: z.string(),
+  }),
+});
+
 interface ContextProps {
   account?: string;
   transactionHash?: string;
@@ -27,7 +36,7 @@ interface ContextProps {
   connectWallet: () => void;
   withdraw: () => void;
   requestToken: () => void;
-  setLockTime: () => void;
+  setLockTime: (duration: number) => void;
   setWithdrawal: (amount: number) => void;
   getContractBalance: () => Promise<number>;
 }
@@ -48,6 +57,7 @@ export const DenFaucetProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [state, dispatch] = useReducer(
     (prev: State, next: State) => ({
       ...prev,
@@ -63,64 +73,132 @@ export const DenFaucetProvider = ({
   );
 
   useEffect(() => {
+    // if (!window.ethereum) {
+    //   toast.error("Metamask is not installed.");
+    //   return;
+    // }
     const populateState = async () => {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
-        abi.abi,
-        signer
-      );
-      dispatch({ contract, provider, signer });
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(
+          process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
+          abi.abi,
+          signer
+        );
+        dispatch({ contract, provider, signer });
+      } catch (error: unknown) {
+        const parsedError = Web3Error.parse(error);
+        toast.error(parsedError.code);
+      }
     };
     populateState();
   }, []);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const connectWallet = async () => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     if (!state.provider) return;
-    const wallets = (await state.provider.send(
-      "eth_requestAccounts",
-      []
-    )) as string[];
-    dispatch({ connectedWalletAddress: wallets?.[0] });
+    try {
+      const wallets = (await state.provider.send(
+        "eth_requestAccounts",
+        []
+      )) as string[];
+      dispatch({ connectedWalletAddress: wallets?.[0] });
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+    }
   };
 
   const getContractBalance = async () => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return 0;
+    }
     if (!state.contract) return 0;
-    const balance = (await state.contract.getBalance()) as BigInt;
-    return Number(balance) / 10 ** 18;
+    try {
+      const balance = (await state.contract.getBalance()) as BigInt;
+      return Number(balance) / 10 ** 18;
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+      return 0;
+    }
   };
 
   const withdraw = async () => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     if (!state.contract) return;
-    const res = await state.contract.withdraw();
-    const data = await res.wait();
-    console.log(data);
+    try {
+      const res =
+        (await state.contract.withdraw()) as ContractTransactionResponse;
+      const data = await res.wait();
+      console.log(data);
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+    }
   };
-  const setLockTime = async () => {
+  const setLockTime = async (duration: number) => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     if (!state.contract) return;
-    const res = await state.contract.setLockTime(1440);
-    const data = await res.wait();
-    console.log(data);
+    try {
+      const res = (await state.contract.setLockTime(
+        duration
+      )) as ContractTransactionResponse;
+      const data = await res.wait();
+      console.log(data);
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+    }
   };
   const setWithdrawal = async (amount: number) => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     if (!state.contract) return;
-    const res = await state.contract.setWithdrawalAmount(amount);
-    const data = await res.wait();
-    console.log(data);
+    try {
+      const res = (await state.contract.setWithdrawalAmount(
+        amount
+      )) as ContractTransactionResponse;
+      const data = await res.wait();
+      console.log(data);
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+    }
   };
 
   const requestToken = async () => {
+    if (!window.ethereum) {
+      toast.error("Metamask is not installed.");
+      return;
+    }
     if (!state.contract) return;
     setIsLoading(true);
-    const res =
-      (await state.contract.requestToken()) as ContractTransactionResponse;
-    dispatch({ transactionHash: res.hash });
-    const data = await res.wait();
-    console.log(data);
-    setIsLoading(false);
+    try {
+      const res =
+        (await state.contract.requestToken()) as ContractTransactionResponse;
+      dispatch({ transactionHash: res.hash });
+      const data = await res.wait();
+      console.log(data);
+    } catch (error: unknown) {
+      const parsedError = Web3Error.parse(error);
+      toast.error(parsedError.code);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -6,15 +6,14 @@ const Owner = () => {
   const { withdraw, setLockTime, setWithdrawal, getContractBalance, account } =
     useFaucetContext();
   const [contractBalance, setContractBalance] = useState(0);
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<{ amount: string }>();
+  const amountForm = useForm<{ amount: string }>();
+  const lockTimeForm = useForm<{ lockTime: string }>();
 
-  const onSubmit: SubmitHandler<{ amount: string }> = ({ amount }) =>
+  const onAmountSubmit: SubmitHandler<{ amount: string }> = ({ amount }) =>
     setWithdrawal(parseInt(amount));
+  const onLockTimeSubmit: SubmitHandler<{ lockTime: string }> = ({
+    lockTime,
+  }) => setLockTime(parseInt(lockTime));
   return (
     <>
       <button
@@ -42,18 +41,32 @@ const Owner = () => {
             <button className="btn btn-outline" onClick={withdraw}>
               Withdraw
             </button>
-            <button className="btn btn-outline" onClick={setLockTime}>
-              Set Lock Time
-            </button>
-            <form className="form-control" onSubmit={handleSubmit(onSubmit)}>
+            <form
+              className="form-control"
+              onSubmit={lockTimeForm.handleSubmit(onLockTimeSubmit)}
+            >
+              <label className="input-group">
+                <input
+                  type="text"
+                  placeholder="Duration in minutes"
+                  className="input input-bordered flex-1"
+                  {...lockTimeForm.register("lockTime", { required: true })}
+                />
+                <button className="btn min-w-[40%]">SET LOCKTIME</button>
+              </label>
+            </form>
+            <form
+              className="form-control"
+              onSubmit={amountForm.handleSubmit(onAmountSubmit)}
+            >
               <label className="input-group">
                 <input
                   type="text"
                   placeholder="Amount to send to user"
                   className="input input-bordered flex-1"
-                  {...register("amount", { required: true })}
+                  {...amountForm.register("amount", { required: true })}
                 />
-                <button className="btn">SET AMOUNT</button>
+                <button className="btn min-w-[40%]">SET AMOUNT</button>
               </label>
             </form>
           </div>
