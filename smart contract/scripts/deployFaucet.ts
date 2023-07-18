@@ -1,16 +1,14 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const DenFaucet = await ethers.getContractFactory("DenFaucet");
-  const denFaucet = await DenFaucet.deploy("0x975651f39Ed7e1380aC6d969F8a61A36f7Efa048")
-
-  await denFaucet.deployed();
-
-  console.log(`Den Faucet deployed to ${denFaucet.address}`);
+  const denFaucet = await ethers.deployContract("DenFaucet", [
+    process.env.TOKEN_ADDRESS,
+  ]);
+  await denFaucet.waitForDeployment();
+  console.log(`Den Faucet deployed to ${denFaucet.target}`);
 }
 
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-

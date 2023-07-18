@@ -47,4 +47,3 @@ contract Den is ERC20Capped {
         return blockReward;
     }
 }
-
